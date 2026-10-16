@@ -2,7 +2,7 @@
 #include <iostream>
 
 // project headers
-#include "../include/experiment.hpp"
+#include "experiment.hpp"
 
 // =================================================
 /* 
