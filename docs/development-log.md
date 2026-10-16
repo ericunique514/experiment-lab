@@ -27,8 +27,13 @@ Example:
 
 The next stage will introduce an `Experiment` object containing both a control group and a treatment group.
 
-### Next Steps
+### First Implementations
+- Implemented `Experiment` with control and treatment groups.
+- Added `absoluteLift()` and `relativeLift()`.
+- Handled empty groups and zero control conversion rate.
+- Manually tested positive lift, negative lift, equal performance, and zero control conversions.
 
-- Add control and treatment groups.
-- Calculate absolute lift.
-- Calculate relative lift.
+### Next Steps
+- Add CMake build configuration.
+- Build and run the project using CMake.
+- Add revenue-per-user calculations.

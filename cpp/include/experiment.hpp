@@ -1,7 +1,8 @@
 #ifndef EXPERIMENT_HPP
 #define EXPERIMENT_HPP
 
-struct ExperimentGroup {
+struct ExperimentGroup 
+{
     int users;
     int conversions;
     double revenue;
@@ -9,4 +10,12 @@ struct ExperimentGroup {
     double conversionRate() const;
 };
 
+struct Experiment 
+{
+    ExperimentGroup control;
+    ExperimentGroup treatment;
+
+    double absoluteLift() const;
+    double relativeLift() const;
+};
 #endif
