@@ -22,6 +22,20 @@ const {
 
 // =================================================
 /*
+calculates the revenue per user.
+
+returns 0.0 if the group contains no users.
+*/
+double ExperimentGroup::revenuePerUser()
+const {
+    if (users == 0) {
+        return 0.0; // avoid division by zero
+    }
+    return revenue/users;
+}
+
+// =================================================
+/*
 calculates the absolute change in conversion rate
 between the treatment and control groups.
 
@@ -74,3 +88,55 @@ const {
     }
     return (convRateTreatment - convRateControl)/convRateControl;  
 };
+
+// ===========================================================
+/*
+calculates the absolute change in revenue per user
+between the control and treatment groups.
+
+absolute revenue lift = (treatment revenue per user)
+                        - (control revenue per user)
+*/
+double Experiment::absoluteRevenueLift()
+const {
+    if(control.users == 0 || treatment.users == 0)
+    {
+        return 0.0; 
+        // does not mean lift is actually 0, just returning
+        // 0 for now to avoid error
+    }
+    double revPerUserControl {control.revenuePerUser()};
+    double revPerUserTreatment {treatment.revenuePerUser()};
+    return revPerUserTreatment - revPerUserControl;
+}
+
+// =================================================
+/*
+calculates the treatment's revenue per user change
+relative to the control group's revenue per user.
+
+relative revenue lift = (treatment revenue per user - control revenue per user)
+                / control revenue per user
+
+the relative revenue lift is undefined if the control
+revenue per user is zero.
+*/
+double Experiment::relativeRevenueLift()
+const {
+    if(control.users == 0 || treatment.users == 0)
+    {
+        return 0.0;
+        // does not mean lift is actually 0, just returning
+        // 0 for now to avoid error
+    }
+    double revPerUserControl {control.revenuePerUser()};
+    double revPerUserTreatment {treatment.revenuePerUser()};
+    if (revPerUserControl == 0.0)
+    {
+        std::cerr 
+        << "control group revenue per user results in undefined relative revenue lift"
+        << '\n';
+        return 0.0;
+    }
+    return (revPerUserTreatment - revPerUserControl)/revPerUserControl;  
+}

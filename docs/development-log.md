@@ -33,7 +33,15 @@ The next stage will introduce an `Experiment` object containing both a control g
 - Handled empty groups and zero control conversion rate.
 - Manually tested positive lift, negative lift, equal performance, and zero control conversions.
 
+### Revenue Metrics
+- Added `revenuePerUser()` to `ExperimentGroup`.
+- Added `absoluteRevenueLift()` and `relativeRevenueLift()` to `Experiment`.
+- Handled zero-user cases to avoid division by zero.
+- Handled zero control revenue per user, where relative revenue lift is undefined.
+- Manually tested positive, negative, equal, and zero-control revenue cases.
+- Confirmed the project builds and runs successfully with CMake.
+
 ### Next Steps
-- Add CMake build configuration.
-- Build and run the project using CMake.
-- Add revenue-per-user calculations.
+- Add automated unit tests for experiment metrics.
+- Integrate testing into the CMake build.
+- Begin implementing statistical analysis, starting with standard error and confidence intervals.

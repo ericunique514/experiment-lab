@@ -8,6 +8,7 @@ struct ExperimentGroup
     double revenue;
 
     double conversionRate() const;
+    double revenuePerUser() const;
 };
 
 struct Experiment 
@@ -17,5 +18,8 @@ struct Experiment
 
     double absoluteLift() const;
     double relativeLift() const;
+
+    double absoluteRevenueLift() const;
+    double relativeRevenueLift() const;
 };
 #endif
