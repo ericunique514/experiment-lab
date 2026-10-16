@@ -13,7 +13,24 @@ add_executable(experiment
     cpp/src/experiment.cpp
 )
 
-# Tell the compiler where our header files are
 target_include_directories(experiment PRIVATE
     ${PROJECT_SOURCE_DIR}/cpp/include
+)
+
+# Create the test executable
+add_executable(experiment_tests
+    cpp/tests/experiment_tests.cpp
+    cpp/src/experiment.cpp
+)
+
+# Tell the compiler where our header files are
+target_include_directories(experiment_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/cpp/include
+)
+
+enable_testing()
+
+add_test(
+    NAME ExperimentTests
+    COMMAND experiment_tests
 )
