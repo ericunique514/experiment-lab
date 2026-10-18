@@ -6,6 +6,7 @@ user_info = []
 
 # COMMENT OUT THIS LINE IF YOU WANT YOUR OWN DATASET. CURRENTLY GIVES THE SAME DATASET OVER AND OVER AGAIN FOR TESTING PURPOSES
 random.seed(1)
+
 # creates fake users
 for user_id in range(1, 40001):
     # randomizes the device of the user with 40% chance of being desktop and 60% chance of being mobile
@@ -23,46 +24,46 @@ for user_id in range(1, 40001):
     if device == 'Desktop':
         if group == 'A':
             if purchase_chance <= 0.12: # Desktop users in group A with 12% chance of buying
-                decision = 1
+                purchased = 1
                 order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
             else: 
-                decision = 0
+                purchased = 0
                 order_price = 0
         else:
             if purchase_chance <= 0.123: # Desktop users in group B with 12.3% chance of buying
-                decision = 1
+                purchased = 1
                 order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
             else:
-                decision = 0
+                purchased = 0
                 order_price = 0
     else:
         if group == 'A':
             if purchase_chance <= 0.09: # Mobile users in group A with 9% chance of buying
-                decision = 1
+                purchased = 1
                 order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
             else: 
-                decision = 0
+                purchased = 0
                 order_price = 0
         else:
             if purchase_chance <= 0.11: # Mobile users in group B with 11% chance of buying
-                decision = 1
+                purchased = 1
                 order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
             else:
-                decision = 0
+                purchased = 0
                 order_price = 0
 
     # Store all the information in a list to be transformed into a pandas dataframe           
-    user_info.append([user_id, device, group, decision, order_price])
+    user_info.append([user_id, device, group, purchased, order_price])
 
-df = pd.DataFrame(user_info, columns=['User ID', 'Device', 'Group', 'Decision', 'Order Price'])
+df = pd.DataFrame(user_info, columns=['user_id', 'device', 'variant', 'purchased', 'order_price'])
 print(df)
 
-# Group by device and group to get the conversion rate of each set of device and group
-grouped_pd = df.groupby(['Device', 'Group'], as_index=False)['Decision'].mean().rename(columns={'Decision': 'Conversion Rate'})
+# group by device and group to get the conversion rate of each set of device and group
+grouped_pd = df.groupby(['device', 'variant'], as_index=False)['purchased'].mean().rename(columns={'purchased': 'Conversion Rate'})
 print(grouped_pd)
 
 # Save the dataframe to a csv file for C++ part
-df.to_csv('generated_users.csv')
+df.to_csv('generated_users.csv', index=False)
 
 # Save the dataframe to a SQLite database
 connection = sqlite3.connect('generated_users.db')
