@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../include/experiment.hpp"
+#include "experiment.hpp"
 
 int main() {
     ExperimentGroup control{1000, 0, 50000.0};
