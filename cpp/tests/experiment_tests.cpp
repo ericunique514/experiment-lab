@@ -931,6 +931,236 @@ bool testIsConversionSignificant()
 
 // ===========================================
 
+// test filtering users by device
+bool testFilterUsersByDevice()
+{
+    std::vector<UserRecord> users
+    {
+        {1, "Mobile", "A", 0, 0.0},
+        {2, "Desktop", "B", 1, 49.99},
+        {3, "Mobile", "B", 1, 39.50},
+        {4, "Desktop", "A", 0, 0.0},
+        {5, "Mobile", "A", 1, 29.99}
+    };
+
+
+    // test 1: filter Mobile users
+    std::vector<UserRecord> mobileUsers {
+        filterUsersByDevice(users, "Mobile")
+    };
+
+    if (mobileUsers.size() != 3)
+    {
+        return false;
+    }
+
+    if (mobileUsers[0].userId != 1 ||
+        mobileUsers[1].userId != 3 ||
+        mobileUsers[2].userId != 5)
+    {
+        return false;
+    }
+
+    for (const UserRecord& user : mobileUsers)
+    {
+        if (user.device != "Mobile")
+        {
+            return false;
+        }
+    }
+
+
+    // test 2: filter Desktop users
+    std::vector<UserRecord> desktopUsers {
+        filterUsersByDevice(users, "Desktop")
+    };
+
+    if (desktopUsers.size() != 2)
+    {
+        return false;
+    }
+
+    if (desktopUsers[0].userId != 2 ||
+        desktopUsers[1].userId != 4)
+    {
+        return false;
+    }
+
+    for (const UserRecord& user : desktopUsers)
+    {
+        if (user.device != "Desktop")
+        {
+            return false;
+        }
+    }
+
+
+    // test 3: device does not exist
+    std::vector<UserRecord> tabletUsers {
+        filterUsersByDevice(users, "Tablet")
+    };
+
+    if (!tabletUsers.empty())
+    {
+        return false;
+    }
+
+
+    // test 4: empty input vector
+    std::vector<UserRecord> emptyUsers {};
+
+    std::vector<UserRecord> filteredEmpty {
+        filterUsersByDevice(emptyUsers, "Mobile")
+    };
+
+    if (!filteredEmpty.empty())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// ===========================================
+
+// test required sample size per group
+bool testRequiredSampleSizePerGroup()
+{
+    // test 1: detect 10% -> 11%
+    ExperimentPlan test1
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    int actual1 {
+        requiredSampleSizePerGroup(test1)
+    };
+
+    int expected1 {14751};
+
+    if (actual1 != expected1)
+    {
+        return false;
+    }
+
+
+    // test 2: larger effect should require fewer users
+    // detect 10% -> 12%
+    ExperimentPlan test2
+    {
+        0.10,
+        0.12,
+        0.05,
+        0.80
+    };
+
+    int actual2 {
+        requiredSampleSizePerGroup(test2)
+    };
+
+    int expected2 {3841};
+
+    if (actual2 != expected2)
+    {
+        return false;
+    }
+
+
+    // test 3: same absolute effect at a higher baseline
+    // detect 20% -> 21%
+    ExperimentPlan test3
+    {
+        0.20,
+        0.21,
+        0.05,
+        0.80
+    };
+
+    int actual3 {
+        requiredSampleSizePerGroup(test3)
+    };
+
+    int expected3 {25583};
+
+    if (actual3 != expected3)
+    {
+        return false;
+    }
+
+
+    // test 4: treatment can also be worse than baseline
+    // 11% -> 10% should require the same sample size
+    ExperimentPlan test4
+    {
+        0.11,
+        0.10,
+        0.05,
+        0.80
+    };
+
+    int actual4 {
+        requiredSampleSizePerGroup(test4)
+    };
+
+    int expected4 {14751};
+
+    if (actual4 != expected4)
+    {
+        return false;
+    }
+
+
+    // test 5: invalid baseline rate
+    ExperimentPlan test5
+    {
+        0.0,
+        0.10,
+        0.05,
+        0.80
+    };
+
+    if (requiredSampleSizePerGroup(test5) != 0)
+    {
+        return false;
+    }
+
+
+    // test 6: invalid target rate
+    ExperimentPlan test6
+    {
+        0.10,
+        1.0,
+        0.05,
+        0.80
+    };
+
+    if (requiredSampleSizePerGroup(test6) != 0)
+    {
+        return false;
+    }
+
+
+    // test 7: baseline and target are identical
+    ExperimentPlan test7
+    {
+        0.10,
+        0.10,
+        0.05,
+        0.80
+    };
+
+    if (requiredSampleSizePerGroup(test7) != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+// ===========================================
+
 // call all functions in main
 int main()
 {
@@ -946,7 +1176,9 @@ int main()
         testPooledConversionStandardError() &&
         testConversionZScore() &&
         testConversionPValue() &&
-        testIsConversionSignificant()
+        testIsConversionSignificant() &&
+        testFilterUsersByDevice() &&
+        testRequiredSampleSizePerGroup()
     )
     {
         std::cout << "PASS" << std::endl;
