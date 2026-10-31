@@ -3,65 +3,44 @@
 #include "csv_reader.hpp"
 
 int main() {
-    ExperimentGroup control{1000, 0, 50000.0};
-    ExperimentGroup treatment{1000, 10, 55000.0};
-    Experiment Test{control, treatment};
-    
-    std::vector<UserRecord> testUsers 
-    {
-        loadUsersFromCsv("generated_users.csv")
-    };
+    auto testUsers = loadUsersFromCsv("generated_users.csv");
     Experiment testExperiment{createExperiment(testUsers)};
+    ConfidenceInterval ci {testExperiment.conversionConfidenceInterval95()};
 
-    /*std::cout << "Control conversion: "
-              << control.conversionRate()
-              << '\n'
-              << "Treatment conversion: "
-              << treatment.conversionRate()
-              << '\n'
-              << "Revenue per user (control): "
-              << control.revenuePerUser()
-              << '\n'
-              << "Revenue per user (treatment): "
-              << treatment.revenuePerUser()
-              << '\n'
-              << "Absolute Lift: "
-              << Test.absoluteLift()
-              << '\n'
-              << "Relative Lift: "
-              << Test.relativeLift()
-              << '\n'
-              << "Absolute Revenue Lift: "
-              << Test.absoluteRevenueLift()
-              << '\n'
-              << "Relative Revenue Lift: "
-              << Test.relativeRevenueLift()
-              << std::endl;
-    */
-   std::cout << "Control info: "
-             << '\n'   
+    std::cout << "Control info: "
+             << '\n'
+             << "Control users: "   
              << testExperiment.control.users
              << '\n'
+             << "Control conversions: "
              << testExperiment.control.conversions
              << '\n'
+             << "Control conversion rate:"
              << testExperiment.control.conversionRate()
              << '\n'
+             << "Control revenue: "
              << testExperiment.control.revenue
              << '\n'
+             << "Control revenue per user: "
              << testExperiment.control.revenuePerUser()
-             << '\n'
+             << '\n' << '\n'
              << "Treatment info: "
              << '\n'
+             << "Treatment users: "
              << testExperiment.treatment.users
              << '\n'
+             << "Treatment conversions: "
              << testExperiment.treatment.conversions
              << '\n'
+             << "Treatent conversion rate: "
              << testExperiment.treatment.conversionRate()
              << '\n'
+             << "Treatment revenue: "
              << testExperiment.treatment.revenue
              << '\n'
+             << "Treatment revenue per user: "
              << testExperiment.treatment.revenuePerUser()
-             << '\n'
+             << '\n' << '\n'
              << "Absolute conversion lift: "
              << testExperiment.absoluteLift()
              << '\n'
@@ -73,6 +52,22 @@ int main() {
              << '\n'
              << "Relative revenue lift: "
              << testExperiment.relativeRevenueLift()
+             << '\n'
+             << "Confidence interval: ["
+             << ci.lower
+             << ", "
+             << ci.upper
+             << "]\n"
+             << "Z Score: "
+             << testExperiment.conversionZScore()
+             << '\n'
+             << "P Value: "
+             << testExperiment.conversionPValue()
+             << '\n'
+             << "Statistically significant (alpha = 0.05): "
+             << std::boolalpha
+             << testExperiment.isConversionSignificant(0.05)
+             << '\n'
              << std::endl;
 
     return 0;
