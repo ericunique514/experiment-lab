@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated experiment data
+generated_users.csv
+generated_users.db

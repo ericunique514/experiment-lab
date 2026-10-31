@@ -140,3 +140,35 @@ const {
     }
     return (revPerUserTreatment - revPerUserControl)/revPerUserControl;  
 }
+
+// =========================================================
+/*
+creates an experiment by separating a user record into
+the control and treatment group
+*/
+Experiment createExperiment(
+    const std::vector<UserRecord>& users
+)
+{
+    ExperimentGroup control{0, 0, 0.0};
+    ExperimentGroup treatment{0, 0, 0.0};
+
+    for (const UserRecord& user: users)
+    {
+        if (user.variant == "A")
+        {
+            ++control.users;
+            control.conversions += user.purchased;
+            control.revenue += user.orderPrice;
+
+        }
+        else if (user.variant == "B")
+        {
+            ++treatment.users;
+            treatment.conversions += user.purchased;
+            treatment.revenue += user.orderPrice;
+        }
+    }
+    ;
+    return Experiment{control, treatment};
+}

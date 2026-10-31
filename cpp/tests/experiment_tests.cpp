@@ -4,6 +4,7 @@
 
 // Project headers
 #include "experiment.hpp"
+#include "csv_reader.hpp"
 
 // ===========================================
 // helper function to determine T/F for the tests
@@ -17,6 +18,20 @@ bool approximatelyEqual(double actual, double expected)
     {
         return false;
     }
+}
+// ===========================================
+
+bool userRecordsEqual(
+    const UserRecord& actual,
+    const UserRecord& expected)
+{
+    return actual.userId == expected.userId &&
+           actual.device == expected.device &&
+           actual.variant == expected.variant &&
+           actual.purchased == expected.purchased &&
+           approximatelyEqual(
+               actual.orderPrice,
+               expected.orderPrice);
 }
 
 // ===========================================
@@ -319,6 +334,77 @@ bool testRelRevLift()
     double actual5 {Test5.relativeRevenueLift()};
     double expected5 {0.0};
     if (!approximatelyEqual(actual5, expected5))
+    {
+        return false;
+    }
+    return true;
+}
+
+// ===========================================
+
+bool testLoadUsersFromCSV()
+{
+    auto actualList =
+        loadUsersFromCsv("cpp/tests/data/test_users.csv");
+
+    std::vector<UserRecord> expectedList
+    {
+        {1, "Mobile", "A", 0, 0.0},
+        {2, "Desktop", "B", 1, 49.99},
+        {3, "Mobile", "B", 1, 39.50},
+        {4, "Desktop", "A", 0, 0.0}
+    };
+
+    if (actualList.size() != expectedList.size())
+    {
+        return false;
+    }
+
+    for (std::size_t i = 0; i < actualList.size(); ++i)
+    {
+        if (!userRecordsEqual(actualList[i], expectedList[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ===========================================
+
+bool testCreateExperiment()
+{
+    std::vector<UserRecord> userList
+    {
+        {1, "Mobile", "A", 0, 0.0},
+        {2, "Desktop", "B", 1, 49.99},
+        {3, "Mobile", "B", 1, 39.50},
+        {4, "Desktop", "A", 0, 0.0}
+    };
+    Experiment expectedExperiment
+    {
+        {2, 0, 0.0},
+        {2, 2, 89.49}
+    };
+    Experiment actualExperiment =
+        createExperiment(userList);
+    if (
+        expectedExperiment.control.users !=
+        actualExperiment.control.users ||
+        expectedExperiment.control.conversions !=
+        actualExperiment.control.conversions ||
+        !approximatelyEqual(
+            expectedExperiment.control.revenue,
+            actualExperiment.control.revenue) ||
+        expectedExperiment.treatment.users !=
+        actualExperiment.treatment.users ||
+        expectedExperiment.treatment.conversions !=
+        actualExperiment.treatment.conversions ||
+        !approximatelyEqual(
+            expectedExperiment.treatment.revenue,
+            actualExperiment.treatment.revenue)
+    )
     {
         return false;
     }
