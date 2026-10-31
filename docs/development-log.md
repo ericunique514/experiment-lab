@@ -227,12 +227,28 @@ The synthetic dataset generator currently creates 40,000 users with deterministi
 
 Treatment effects differ by device type, allowing future segment-level analysis.
 
+## End-to-End Synthetic Experiment
+
+### Implemented
+- Connected the generated 40,000-user CSV dataset to the C++ analysis engine.
+- Loaded user-level records using `loadUsersFromCsv()`.
+- Aggregated user records into an `Experiment` using `createExperiment()`.
+- Generated a complete experiment analysis including:
+  - conversion rates
+  - absolute and relative lift
+  - revenue per user
+  - revenue lift
+  - 95% confidence interval
+  - z-score
+  - two-sided p-value
+  - statistical significance
+- Successfully built and ran the complete pipeline using CMake.
+- Confirmed all automated tests pass with CTest.
+
 ---
 
 ## Next Steps
 
-- Run the complete 40,000-user synthetic experiment through the full C++ statistical pipeline.
-- Produce a clean experiment report from `main.cpp`.
 - Compare calculated results against the known behavior of the synthetic data.
 - Add segment-level analysis for:
   - Mobile users.
