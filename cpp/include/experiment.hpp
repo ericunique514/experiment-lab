@@ -49,4 +49,20 @@ Experiment createExperiment(
     const std::vector<UserRecord>& users
 );
 
+std::vector<UserRecord> filterUsersByDevice(
+    const std::vector<UserRecord>& users,
+    const std::string& device 
+);
+
+struct ExperimentPlan
+{
+    double baselineRate;
+    double targetRate;
+    double alpha;
+    double desiredPower;
+};
+
+int requiredSampleSizePerGroup(
+    const ExperimentPlan& experimentPlan
+);
 #endif

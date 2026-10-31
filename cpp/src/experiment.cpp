@@ -300,15 +300,112 @@ double Experiment::conversionPValue() const
 
 // =========================================================
 /*
-Determines whether the difference between the control
+determines whether the difference between the control
 and treatment conversion rates is statistically significant.
 
-Returns true when the conversion p-value is less than
+returns true when the conversion p-value is less than
 the supplied significance level alpha.
 */
 bool Experiment::isConversionSignificant(double alpha) const
 {
     return conversionPValue() < alpha;
+}
+
+// =========================================================
+/*
+Filters user records by the specified device type.
+
+Returns a vector containing only users whose device
+matches the supplied device string.
+*/
+std::vector<UserRecord> filterUsersByDevice(
+    const std::vector<UserRecord>& users,
+    const std::string& device
+)
+{
+    std::vector<UserRecord> filteredUsers {};
+    for (const UserRecord& user: users)
+    {
+        if(user.device == device)
+        {
+            filteredUsers.push_back(user);
+        }
+    }
+    return filteredUsers;
+}
+
+// =========================================================
+/*
+Calculates the minimum required sample size per experiment
+group for detecting a difference between the baseline and
+target conversion rates.
+
+Uses a two-sided significance level of 0.05 and statistical
+power of 0.80 for the current implementation.
+
+Returns 0 if either conversion rate is outside the range
+(0, 1), or if the baseline and target rates are equal.
+*/
+int requiredSampleSizePerGroup(
+    const ExperimentPlan& experimentPlan
+)
+{
+    double pA {experimentPlan.baselineRate};
+    double pB {experimentPlan.targetRate};
+    // return early if the input conditions are invalid
+    if (!(0.0 < pA && pA < 1.0))
+    {
+        std::cerr << "baseline rate must be between 0 and 1";
+        return 0;
+    }
+    if (!(0.0 < pB && pB < 1.0))
+    {
+        std::cerr << "target rate must be between 0 and 1";
+        return 0;
+    }
+    if (experimentPlan.baselineRate == experimentPlan.targetRate)
+    {
+        std::cerr << "target rate must be different from baseline rate";
+        return 0;
+    }
+    /*
+    double alpha {experimentPlan.alpha}; 
+    double power {experimentPlan.desiredPower}; 
+    these will be used when using the generalized 
+    zAlpha and zScore
+    */
+    double zAlpha {1.96}; // hardcoded for now
+    double zPower {0.8416}; // hardcoded for now
+    double avrgRate {(pA + pB)/2};
+    double significanceTerm
+    {
+        zAlpha * std::sqrt(
+            2.0 * avrgRate * (1.0 - avrgRate)
+        )
+
+    };
+    double powerTerm 
+    {
+        zPower * std::sqrt(
+            pA * (1.0 - pA) + 
+            pB * (1.0 - pB)
+        )
+    };
+    double effectSize {pB - pA};
+    int requiredSampleSize 
+    {
+        static_cast<int>
+        (
+            std::ceil
+            (
+               ((significanceTerm + powerTerm) *
+                (significanceTerm + powerTerm))
+                /
+                (effectSize * effectSize)
+            )
+        )
+    };
+    return requiredSampleSize;
 }
 
 // =========================================================

@@ -225,7 +225,7 @@ The project currently supports:
 
 The synthetic dataset generator currently creates 40,000 users with deterministic output during development using a fixed random seed.
 
-Treatment effects differ by device type, allowing future segment-level analysis.
+Treatment effects differ by device type. Segment-level analysis confirmed that the overall treatment improvement is primarily driven by Mobile users.
 
 ## End-to-End Synthetic Experiment
 
@@ -245,14 +245,110 @@ Treatment effects differ by device type, allowing future segment-level analysis.
 - Successfully built and ran the complete pipeline using CMake.
 - Confirmed all automated tests pass with CTest.
 
----
+## Device Segmentation
+
+### Implemented
+- Added `filterUsersByDevice()` to filter experiment users by device type.
+- Added automated tests for Mobile, Desktop, nonexistent-device, and empty-input cases.
+- Reused the existing experiment engine to analyze device segments independently.
+- Added reusable reporting for Overall, Mobile, and Desktop experiment results.
+
+### Results
+
+Overall:
+- Control conversion: 10.24%
+- Treatment conversion: 11.62%
+- Absolute lift: +1.38 percentage points.
+- P-value: approximately 9.92e-06.
+- Statistically significant at alpha = 0.05.
+
+Mobile:
+- Control conversion: 8.92%
+- Treatment conversion: 11.07%
+- Absolute lift: +2.15 percentage points.
+- Relative lift: +24.11%.
+- Statistically significant at alpha = 0.05.
+
+Desktop:
+- Control conversion: 12.19%
+- Treatment conversion: 12.42%
+- Absolute lift: +0.23 percentage points.
+- 95% confidence interval crosses zero.
+- Not statistically significant at alpha = 0.05.
+
+### Interpretation
+The overall treatment improvement is primarily driven by Mobile users.
+
+The Mobile segment shows a substantial and statistically significant treatment effect, while the Desktop segment shows little evidence of a meaningful treatment effect.
+
+This demonstrates why aggregate experiment results should be supplemented with segment-level analysis.
+
+### Experiment Planning — Required Sample Size
+
+### Implemented
+
+Added ExperimentPlan to represent assumptions used before running an experiment.
+
+Added requiredSampleSizePerGroup().
+
+The sample-size calculation determines how many users are required in each experiment group to detect a specified difference between baseline and target conversion rates.
+
+### Current Assumptions
+
+The current implementation uses:
+
+- Two equally sized groups.
+- Two-sided hypothesis testing.
+- Significance level: alpha = 0.05.
+- Desired statistical power: 0.80.
+- Corresponding hardcoded critical values:
+- zAlpha = 1.96
+- zPower = 0.8416
+
+### Validation
+
+Added checks for:
+- Baseline conversion rates outside (0, 1).
+- Target conversion rates outside (0, 1).
+- Equal baseline and target conversion rates.
+
+### Automated Testing
+
+Added tests covering:
+- 10% → 11% conversion improvement.
+- 10% → 12% conversion improvement.
+- Higher-baseline experiments.
+- Negative treatment effects.
+- Invalid conversion-rate inputs.
+- Equal baseline and target rates.
+
+Example:
+- 10% → 11%
+- requires approximately:
+  - 14,751 users per group
+  - under the current significance and power assumptions.
+
+### Current Statistical Engine
+
+Completed:
+- Conversion rate calculations.
+- Absolute and relative conversion lift.
+- Revenue-per-user calculations.
+- Absolute and relative revenue lift.
+- Conversion standard error.
+- 95% confidence intervals.
+- Pooled standard error.
+- Two-proportion z-test.
+- Two-sided p-values.
+- Statistical significance testing.
+- Required sample-size calculation.
 
 ## Next Steps
 
-- Compare calculated results against the known behavior of the synthetic data.
-- Add segment-level analysis for:
-  - Mobile users.
-  - Desktop users.
-- Compare treatment effects across user segments.
-- Improve generated order values so revenue analysis is not completely determined by conversion rate.
-- Later, apply the same analysis engine to a real randomized A/B testing dataset.
+- Implement statistical power calculation.
+- Generalize sample-size planning to support configurable `alpha` and desired power.
+- Integrate additional user segments as the synthetic generator evolves.
+- Improve the synthetic revenue model with variable order values.
+- Add Python visualizations for experiment and segment results.
+- Apply the analysis engine to a real randomized A/B testing dataset.
+- Finalize project documentation and README.
