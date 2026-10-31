@@ -220,3 +220,95 @@ ConfidenceInterval Experiment::conversionConfidenceInterval95() const
 
 
 // =========================================================
+/*
+calculates the pooled standard error for the difference
+between the control and treatment conversion rates.
+
+the pooled proportion assumes the null hypothesis that
+both groups have the same underlying conversion rate.
+
+returns 0.0 if either group contains no users.
+*/
+double Experiment::pooledConversionStandardError() const
+{
+    if(control.users == 0 || treatment.users == 0)
+    {
+        std::cerr << "Absence of users in either group makes "
+                  << "it impossible to calculate pooled "
+                  << "conversion standard error"
+                  << '\n';
+        return 0.0;           
+    }  
+    double pPool 
+    {
+        static_cast<double>(control.conversions + treatment.conversions)/
+        (control.users + treatment.users)
+    };
+    return std::sqrt(pPool*(1-pPool)*((1.0/control.users) + (1.0/treatment.users)));
+}
+
+// =========================================================
+/*
+calculates the z-score for the difference between the
+control and treatment conversion rates.
+
+the z-score measures the observed conversion lift
+relative to the pooled standard error under the null
+hypothesis.
+
+returns 0.0 if either group contains no users.
+*/
+double Experiment::conversionZScore() const
+{
+    double pooledSE {pooledConversionStandardError()};
+    if
+    (
+        control.users == 0 || 
+        treatment.users == 0
+    )
+    {
+        std::cerr << "Absence of users in either group makes "
+                  << "it impossible to calculate a Z score."
+                  << '\n';
+        return 0.0;           
+    }  
+    if (pooledSE == 0.0)
+    {
+        std::cerr << "A pooled standard error of zero makes "
+                  << "it impossible to calculate a Z score."
+                  << '\n';
+        return 0.0;
+    }
+    return absoluteLift()/pooledSE;
+}
+
+// =========================================================
+/*
+calculates the two-sided p-value for the difference
+between the control and treatment conversion rates.
+
+the p-value is derived from the absolute z-score and
+represents how extreme the observed difference would
+be under the null hypothesis that both groups have the
+same underlying conversion rate.
+*/
+double Experiment::conversionPValue() const
+{
+    double zScore {conversionZScore()};
+    return std::erfc(std::abs(zScore)/std::sqrt(2));
+}
+
+// =========================================================
+/*
+Determines whether the difference between the control
+and treatment conversion rates is statistically significant.
+
+Returns true when the conversion p-value is less than
+the supplied significance level alpha.
+*/
+bool Experiment::isConversionSignificant(double alpha) const
+{
+    return conversionPValue() < alpha;
+}
+
+// =========================================================

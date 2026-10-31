@@ -587,6 +587,348 @@ bool testConversionConfidenceInterval95()
 
     return true;
 }
+
+// ===========================================
+
+// test pooled conversion standard error
+bool testPooledConversionStandardError()
+{
+    // test 1: general positive-lift case
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    double actual1 {test1.pooledConversionStandardError()};
+    double expected1 {0.0043804965};
+
+    if (!approximatelyEqual(actual1, expected1))
+    {
+        return false;
+    }
+
+
+    // test 2: equal conversion rates
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual2 {test2.pooledConversionStandardError()};
+    double expected2 {0.0134164079};
+
+    if (!approximatelyEqual(actual2, expected2))
+    {
+        return false;
+    }
+
+
+    // test 3: negative lift
+    Experiment test3
+    {
+        {1000, 150, 0.0},
+        {1000, 120, 0.0}
+    };
+
+    double actual3 {test3.pooledConversionStandardError()};
+    double expected3 {0.0152823428};
+
+    if (!approximatelyEqual(actual3, expected3))
+    {
+        return false;
+    }
+
+
+    // test 4: different sample sizes
+    Experiment test4
+    {
+        {5000, 500, 0.0},
+        {8000, 960, 0.0}
+    };
+
+    double actual4 {test4.pooledConversionStandardError()};
+    double expected4 {0.0056921674};
+
+    if (!approximatelyEqual(actual4, expected4))
+    {
+        return false;
+    }
+
+
+    // test 5: zero users in one group
+    Experiment test5
+    {
+        {0, 0, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual5 {test5.pooledConversionStandardError()};
+
+    if (!approximatelyEqual(actual5, 0.0))
+    {
+        return false;
+    }
+
+
+    // test 6: zero conversions in both groups
+    Experiment test6
+    {
+        {1000, 0, 0.0},
+        {1000, 0, 0.0}
+    };
+
+    double actual6 {test6.pooledConversionStandardError()};
+
+    if (!approximatelyEqual(actual6, 0.0))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+// ===========================================
+
+// test conversion z-score
+bool testConversionZScore()
+{
+    // test 1: positive lift
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    double actual1 {test1.conversionZScore()};
+    double expected1 {3.4242693353};
+
+    if (!approximatelyEqual(actual1, expected1))
+    {
+        return false;
+    }
+
+
+    // test 2: identical conversion rates
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual2 {test2.conversionZScore()};
+    double expected2 {0.0};
+
+    if (!approximatelyEqual(actual2, expected2))
+    {
+        return false;
+    }
+
+
+    // test 3: negative lift
+    Experiment test3
+    {
+        {1000, 150, 0.0},
+        {1000, 120, 0.0}
+    };
+
+    double actual3 {test3.conversionZScore()};
+    double expected3 {-1.9630498076};
+
+    if (!approximatelyEqual(actual3, expected3))
+    {
+        return false;
+    }
+
+
+    // test 4: different sample sizes
+    Experiment test4
+    {
+        {5000, 500, 0.0},
+        {8000, 960, 0.0}
+    };
+
+    double actual4 {test4.conversionZScore()};
+    double expected4 {3.5136001355};
+
+    if (!approximatelyEqual(actual4, expected4))
+    {
+        return false;
+    }
+
+
+    // test 5: zero users
+    Experiment test5
+    {
+        {0, 0, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual5 {test5.conversionZScore()};
+
+    if (!approximatelyEqual(actual5, 0.0))
+    {
+        return false;
+    }
+
+
+    // test 6: pooled standard error = 0
+    Experiment test6
+    {
+        {1000, 0, 0.0},
+        {1000, 0, 0.0}
+    };
+
+    double actual6 {test6.conversionZScore()};
+
+    if (!approximatelyEqual(actual6, 0.0))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// ===========================================
+
+// test conversion p-value
+bool testConversionPValue()
+{
+    // test 1: strong positive effect
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    double actual1 {test1.conversionPValue()};
+    double expected1 {0.0006164549};
+
+    if (!approximatelyEqual(actual1, expected1))
+    {
+        return false;
+    }
+
+
+    // test 2: identical conversion rates
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual2 {test2.conversionPValue()};
+    double expected2 {1.0};
+
+    if (!approximatelyEqual(actual2, expected2))
+    {
+        return false;
+    }
+
+
+    // test 3: negative effect close to 5% threshold
+    Experiment test3
+    {
+        {1000, 150, 0.0},
+        {1000, 120, 0.0}
+    };
+
+    double actual3 {test3.conversionPValue()};
+    double expected3 {0.0496403869};
+
+    if (!approximatelyEqual(actual3, expected3))
+    {
+        return false;
+    }
+
+
+    // test 4: non-significant difference
+    Experiment test4
+    {
+        {1000, 100, 0.0},
+        {1000, 110, 0.0}
+    };
+
+    double actual4 {test4.conversionPValue()};
+    double expected4 {0.4657435879};
+
+    if (!approximatelyEqual(actual4, expected4))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+// ===========================================
+
+// test conversion significance
+bool testIsConversionSignificant()
+{
+    // test 1: highly significant at alpha = 0.05
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    if (!test1.isConversionSignificant(0.05))
+    {
+        return false;
+    }
+
+
+    // test 2: identical groups are not significant
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    if (test2.isConversionSignificant(0.05))
+    {
+        return false;
+    }
+
+
+    // test 3: p ≈ 0.04964, significant at 0.05
+    Experiment test3
+    {
+        {1000, 150, 0.0},
+        {1000, 120, 0.0}
+    };
+
+    if (!test3.isConversionSignificant(0.05))
+    {
+        return false;
+    }
+
+
+    // test 4: same experiment is not significant at alpha = 0.01
+    if (test3.isConversionSignificant(0.01))
+    {
+        return false;
+    }
+
+
+    // test 5: clearly non-significant
+    Experiment test5
+    {
+        {1000, 100, 0.0},
+        {1000, 110, 0.0}
+    };
+
+    if (test5.isConversionSignificant(0.05))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 // ===========================================
 
 // call all functions in main
@@ -600,7 +942,11 @@ int main()
         testAbsRevLift() &&
         testRelRevLift() &&
         testConversionStandardError() &&
-        testConversionConfidenceInterval95()
+        testConversionConfidenceInterval95() &&
+        testPooledConversionStandardError() &&
+        testConversionZScore() &&
+        testConversionPValue() &&
+        testIsConversionSignificant()
     )
     {
         std::cout << "PASS" << std::endl;

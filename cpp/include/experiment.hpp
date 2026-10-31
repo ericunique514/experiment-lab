@@ -30,6 +30,10 @@ struct Experiment
 
     double conversionStandardError() const;
     ConfidenceInterval conversionConfidenceInterval95() const;
+    double pooledConversionStandardError() const;
+    double conversionZScore() const;
+    double conversionPValue() const;
+    bool isConversionSignificant(double alpha) const;
 };
 
 struct UserRecord
