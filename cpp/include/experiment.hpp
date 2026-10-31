@@ -11,6 +11,12 @@ struct ExperimentGroup
     double revenuePerUser() const;
 };
 
+struct ConfidenceInterval
+{
+    double lower;
+    double upper;
+};
+
 struct Experiment 
 {
     ExperimentGroup control;
@@ -21,6 +27,9 @@ struct Experiment
 
     double absoluteRevenueLift() const;
     double relativeRevenueLift() const;
+
+    double conversionStandardError() const;
+    ConfidenceInterval conversionConfidenceInterval95() const;
 };
 
 struct UserRecord

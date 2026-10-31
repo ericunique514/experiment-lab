@@ -1,5 +1,6 @@
 //standard libraries
 #include <iostream>
+#include <cmath>
 
 // project headers
 #include "experiment.hpp"
@@ -172,3 +173,50 @@ Experiment createExperiment(
     ;
     return Experiment{control, treatment};
 }
+
+// =========================================================
+/*
+calculates the standard error of the difference
+between the control and treatment conversion rates.
+
+returns 0.0 if either group contains no users.
+*/
+double Experiment::conversionStandardError() const
+{
+    if(control.users == 0 || treatment.users == 0)
+    {
+        std::cerr << "Absence of users in either group makes "
+                  << "it impossible to calculate standard error."
+                  << '\n';
+        return 0.0;           
+    }
+    double pA {control.conversionRate()};
+    double nA {static_cast<double>(control.users)};
+    double pB {treatment.conversionRate()};
+    double nB {static_cast<double>(treatment.users)};
+    return std::sqrt(((pA * (1 - pA))/nA)+((pB * (1 - pB))/nB));
+}
+
+// =========================================================
+/*
+calculates the 95% confidence interval for the
+absolute difference in conversion rates.
+
+returns {0.0, 0.0} if either group contains no users.
+*/
+ConfidenceInterval Experiment::conversionConfidenceInterval95() const
+{
+    if(control.users == 0 || treatment.users == 0)
+    {
+        std::cerr << "Absence of users in either group makes "
+                  << "it impossible to build 95% CI."
+                  << '\n';
+        return {0.0, 0.0};           
+    }
+    double lower {absoluteLift() - 1.96*conversionStandardError()};
+    double upper {absoluteLift() + 1.96*conversionStandardError()};
+    return {lower,upper};
+}
+
+
+// =========================================================

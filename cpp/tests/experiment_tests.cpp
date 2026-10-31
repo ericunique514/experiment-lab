@@ -413,6 +413,182 @@ bool testCreateExperiment()
 
 // ===========================================
 
+// test conversion standard error
+bool testConversionStandardError()
+{
+    // test 1: general case
+    // control = 10%, treatment = 11.5%
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    double actual1 {test1.conversionStandardError()};
+    double expected1 {0.0043792123};
+
+    if (!approximatelyEqual(actual1, expected1))
+    {
+        return false;
+    }
+
+
+    // test 2: equal conversion rates
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual2 {test2.conversionStandardError()};
+    double expected2 {0.0134164079};
+
+    if (!approximatelyEqual(actual2, expected2))
+    {
+        return false;
+    }
+
+
+    // test 3: no conversions in either group
+    Experiment test3
+    {
+        {1000, 0, 0.0},
+        {1000, 0, 0.0}
+    };
+
+    double actual3 {test3.conversionStandardError()};
+    double expected3 {0.0};
+
+    if (!approximatelyEqual(actual3, expected3))
+    {
+        return false;
+    }
+
+
+    // test 4: zero users in control
+    Experiment test4
+    {
+        {0, 0, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    double actual4 {test4.conversionStandardError()};
+    double expected4 {0.0};
+
+    if (!approximatelyEqual(actual4, expected4))
+    {
+        return false;
+    }
+
+
+    // test 5: different sample sizes
+    Experiment test5
+    {
+        {5000, 500, 0.0},
+        {8000, 960, 0.0}
+    };
+
+    double actual5 {test5.conversionStandardError()};
+    double expected5 {0.0055856960};
+
+    if (!approximatelyEqual(actual5, expected5))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// ===========================================
+
+// test 95% conversion confidence interval
+bool testConversionConfidenceInterval95()
+{
+    // test 1: positive lift
+    Experiment test1
+    {
+        {10000, 1000, 0.0},
+        {10000, 1150, 0.0}
+    };
+
+    ConfidenceInterval actual1 {
+        test1.conversionConfidenceInterval95()
+    };
+
+    double expectedLower1 {0.006416744};
+    double expectedUpper1 {0.023583256};
+
+    if (!approximatelyEqual(actual1.lower, expectedLower1) ||
+        !approximatelyEqual(actual1.upper, expectedUpper1))
+    {
+        return false;
+    }
+
+
+    // test 2: equal conversion rates
+    // lift = 0, but uncertainty still exists
+    Experiment test2
+    {
+        {1000, 100, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    ConfidenceInterval actual2 {
+        test2.conversionConfidenceInterval95()
+    };
+
+    double expectedLower2 {-0.026296159};
+    double expectedUpper2 {0.026296159};
+
+    if (!approximatelyEqual(actual2.lower, expectedLower2) ||
+        !approximatelyEqual(actual2.upper, expectedUpper2))
+    {
+        return false;
+    }
+
+
+    // test 3: negative lift
+    Experiment test3
+    {
+        {1000, 150, 0.0},
+        {1000, 120, 0.0}
+    };
+
+    ConfidenceInterval actual3 {
+        test3.conversionConfidenceInterval95()
+    };
+
+    double expectedLower3 {-0.059924521};
+    double expectedUpper3 {-0.000075479};
+
+    if (!approximatelyEqual(actual3.lower, expectedLower3) ||
+        !approximatelyEqual(actual3.upper, expectedUpper3))
+    {
+        return false;
+    }
+
+
+    // test 4: zero users in control
+    Experiment test4
+    {
+        {0, 0, 0.0},
+        {1000, 100, 0.0}
+    };
+
+    ConfidenceInterval actual4 {
+        test4.conversionConfidenceInterval95()
+    };
+
+    if (!approximatelyEqual(actual4.lower, 0.0) ||
+        !approximatelyEqual(actual4.upper, 0.0))
+    {
+        return false;
+    }
+
+    return true;
+}
+// ===========================================
+
 // call all functions in main
 int main()
 {
@@ -422,7 +598,9 @@ int main()
         testRelativeLift() &&
         testRevPerUser() &&
         testAbsRevLift() &&
-        testRelRevLift()
+        testRelRevLift() &&
+        testConversionStandardError() &&
+        testConversionConfidenceInterval95()
     )
     {
         std::cout << "PASS" << std::endl;
