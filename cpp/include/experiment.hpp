@@ -65,4 +65,9 @@ struct ExperimentPlan
 int requiredSampleSizePerGroup(
     const ExperimentPlan& experimentPlan
 );
+
+double calculatePower(
+    const ExperimentPlan& ExperimentPlan,
+    int sampleSizePerGroup
+);
 #endif

@@ -1159,6 +1159,208 @@ bool testRequiredSampleSizePerGroup()
 
     return true;
 }
+
+// ===========================================
+
+// test statistical power calculation
+bool testCalculatePower()
+{
+    // test 1: sample size previously calculated for ~80% power
+    ExperimentPlan test1
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    double actual1 {
+        calculatePower(test1, 14751)
+    };
+
+    double expected1 {0.79999549};
+
+    if (!approximatelyEqual(actual1, expected1))
+    {
+        return false;
+    }
+
+
+    // test 2: smaller sample size should produce lower power
+    ExperimentPlan test2
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    double actual2 {
+        calculatePower(test2, 5000)
+    };
+
+    double expected2 {0.37107532};
+
+    if (!approximatelyEqual(actual2, expected2))
+    {
+        return false;
+    }
+
+
+    // test 3: larger sample size should produce higher power
+    ExperimentPlan test3
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    double actual3 {
+        calculatePower(test3, 30000)
+    };
+
+    double expected3 {0.97909867};
+
+    if (!approximatelyEqual(actual3, expected3))
+    {
+        return false;
+    }
+
+
+    // test 4: larger treatment effect with its calculated sample size
+    ExperimentPlan test4
+    {
+        0.10,
+        0.12,
+        0.05,
+        0.80
+    };
+
+    double actual4 {
+        calculatePower(test4, 3841)
+    };
+
+    double expected4 {0.80000549};
+
+    if (!approximatelyEqual(actual4, expected4))
+    {
+        return false;
+    }
+
+
+    // test 5: negative treatment effect should have same power
+    // as an effect of the same magnitude in the other direction
+    ExperimentPlan test5
+    {
+        0.11,
+        0.10,
+        0.05,
+        0.80
+    };
+
+    double actual5 {
+        calculatePower(test5, 14751)
+    };
+
+    double expected5 {0.79999549};
+
+    if (!approximatelyEqual(actual5, expected5))
+    {
+        return false;
+    }
+
+
+    // test 6: higher baseline rate example
+    ExperimentPlan test6
+    {
+        0.20,
+        0.21,
+        0.05,
+        0.80
+    };
+
+    double actual6 {
+        calculatePower(test6, 25583)
+    };
+
+    double expected6 {0.80000150};
+
+    if (!approximatelyEqual(actual6, expected6))
+    {
+        return false;
+    }
+
+
+    // test 7: invalid sample size
+    ExperimentPlan test7
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    if (!approximatelyEqual(
+            calculatePower(test7, 0),
+            0.0))
+    {
+        return false;
+    }
+
+
+    // test 8: invalid baseline rate
+    ExperimentPlan test8
+    {
+        0.0,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    if (!approximatelyEqual(
+            calculatePower(test8, 14751),
+            0.0))
+    {
+        return false;
+    }
+
+
+    // test 9: invalid target rate
+    ExperimentPlan test9
+    {
+        0.10,
+        1.0,
+        0.05,
+        0.80
+    };
+
+    if (!approximatelyEqual(
+            calculatePower(test9, 14751),
+            0.0))
+    {
+        return false;
+    }
+
+
+    // test 10: no treatment effect
+    ExperimentPlan test10
+    {
+        0.10,
+        0.10,
+        0.05,
+        0.80
+    };
+
+    if (!approximatelyEqual(
+            calculatePower(test10, 14751),
+            0.0))
+    {
+        return false;
+    }
+
+    return true;
+}
 // ===========================================
 
 // call all functions in main
@@ -1178,7 +1380,8 @@ int main()
         testConversionPValue() &&
         testIsConversionSignificant() &&
         testFilterUsersByDevice() &&
-        testRequiredSampleSizePerGroup()
+        testRequiredSampleSizePerGroup() &&
+        testCalculatePower()
     )
     {
         std::cout << "PASS" << std::endl;

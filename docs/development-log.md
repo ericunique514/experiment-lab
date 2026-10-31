@@ -343,9 +343,62 @@ Completed:
 - Statistical significance testing.
 - Required sample-size calculation.
 
+## Statistical Power Analysis
+
+### Implemented
+- Added `calculatePower()` for pre-experiment power analysis.
+- Calculates the approximate probability of detecting a specified conversion-rate difference for a given sample size per group.
+- Uses the same two-sided normal approximation as the required sample-size calculation.
+- Currently assumes `alpha = 0.05`.
+
+### Validation
+Added checks for:
+- Invalid baseline conversion rates.
+- Invalid target conversion rates.
+- Non-positive sample sizes.
+- Equal baseline and target conversion rates.
+
+### Automated Testing
+Added tests covering:
+- Approximately 80% power at the previously calculated required sample size.
+- Lower power with smaller sample sizes.
+- Higher power with larger sample sizes.
+- Larger treatment effects.
+- Negative treatment effects of equal magnitude.
+- Higher baseline conversion rates.
+- Invalid inputs and edge cases.
+
+The sample-size and power calculations were cross-validated:
+
+`10% → 11%`
+
+requires approximately:
+
+`14,751 users per group`
+
+for 80% power, and:
+
+`calculatePower(..., 14751) ≈ 0.80`
+
+All current automated tests pass through CTest.
+
+## Statistical Engine Milestone
+
+The planned core statistical engine is now complete:
+
+- Conversion-rate analysis.
+- Revenue-per-user analysis.
+- Absolute and relative treatment lift.
+- Standard error.
+- 95% confidence intervals.
+- Two-proportion z-test.
+- Two-sided p-values.
+- Statistical significance testing.
+- Required sample-size calculation.
+- Statistical power calculation.
+
 ## Next Steps
 
-- Implement statistical power calculation.
 - Generalize sample-size planning to support configurable `alpha` and desired power.
 - Integrate additional user segments as the synthetic generator evolves.
 - Improve the synthetic revenue model with variable order values.

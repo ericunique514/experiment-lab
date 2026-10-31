@@ -409,3 +409,65 @@ int requiredSampleSizePerGroup(
 }
 
 // =========================================================
+/*
+Calculates the approximate statistical power for detecting
+the difference between the baseline and target conversion
+rates at a specified sample size per group.
+
+The current implementation assumes equally sized control
+and treatment groups and a two-sided significance level
+of alpha = 0.05.
+
+Returns 0.0 if the conversion rates are invalid, the
+sample size is non-positive, or there is no treatment
+effect to detect.
+*/
+double calculatePower(
+    const ExperimentPlan& experimentPlan,
+    int sampleSizePerGroup
+)
+{
+    double pA {experimentPlan.baselineRate};
+    double pB {experimentPlan.targetRate};
+    int n {sampleSizePerGroup}; // shorter name to call
+    // return early if input conditions are invalid
+    if (!(0.0 < pA && pA < 1.0))
+    {
+        std::cerr << "baseline rate must be between 0 and 1";
+        return 0.0;
+    }
+    if (!(0.0 < pB && pB < 1.0))
+    {
+        std::cerr << "target rate must be between 0 and 1";
+        return 0.0;
+    }
+    if (n <= 0)
+    {
+        std::cerr << "must have a sample size";
+        return 0.0;
+    }
+    if (pA == pB)
+    {
+        std::cerr << "No treatment effect to detect";
+        return 0.0;
+    }
+    double avrgRate {(pA + pB) / 2.0};
+    double zAlpha {1.96}; // hardcoded for now
+    double zPower 
+    {
+        ((std::sqrt(n) * std::abs(pB - pA))
+        - (zAlpha * std::sqrt(2.0 * avrgRate * (1 - avrgRate))))
+        /
+        (std::sqrt((pA * (1 - pA)) + (pB * (1 - pB))))
+    };
+    double power 
+    {
+        0.5 * (1.0 + std::erf(zPower / std::sqrt(2.0)))
+    };
+    if (!(0.0 <= power && power <= 1.0))
+    {
+        std::cerr << "Invalid Power";
+        return 0.0;
+    }
+    return power;
+}
