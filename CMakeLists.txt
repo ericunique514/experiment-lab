@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(experiment
     cpp/src/main.cpp
     cpp/src/experiment.cpp
+    cpp/src/csv_reader.cpp
 )
 
 target_include_directories(experiment PRIVATE
@@ -21,6 +22,7 @@ target_include_directories(experiment PRIVATE
 add_executable(experiment_tests
     cpp/tests/experiment_tests.cpp
     cpp/src/experiment.cpp
+    cpp/src/csv_reader.cpp
 )
 
 # Tell the compiler where our header files are
@@ -33,4 +35,9 @@ enable_testing()
 add_test(
     NAME ExperimentTests
     COMMAND experiment_tests
+)
+
+set_tests_properties(
+    ExperimentTests
+    PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 )

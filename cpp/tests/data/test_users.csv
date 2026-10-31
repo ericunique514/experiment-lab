@@ -1,0 +1,5 @@
+user_id,device,variant,purchased,order_price
+1,Mobile,A,0,0
+2,Desktop,B,1,49.99
+3,Mobile,B,1,39.50
+4,Desktop,A,0,0

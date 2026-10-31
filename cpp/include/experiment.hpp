@@ -22,4 +22,18 @@ struct Experiment
     double absoluteRevenueLift() const;
     double relativeRevenueLift() const;
 };
+
+struct UserRecord
+{
+    int userId;
+    std::string device;
+    std::string variant;
+    int purchased;
+    double orderPrice;
+};
+
+Experiment createExperiment(
+    const std::vector<UserRecord>& users
+);
+
 #endif
