@@ -1,5 +1,7 @@
 //standard libraries
 #include <iostream>
+#include <iomanip>
+#include <stdexcept>
 #include <cmath>
 
 // project headers
@@ -181,8 +183,8 @@ between the control and treatment conversion rates.
 
 returns 0.0 if either group contains no users.
 */
-double Experiment::conversionStandardError() const
-{
+double Experiment::conversionStandardError() 
+const {
     if(control.users == 0 || treatment.users == 0)
     {
         std::cerr << "Absence of users in either group makes "
@@ -204,8 +206,8 @@ absolute difference in conversion rates.
 
 returns {0.0, 0.0} if either group contains no users.
 */
-ConfidenceInterval Experiment::conversionConfidenceInterval95() const
-{
+ConfidenceInterval Experiment::conversionConfidenceInterval95() 
+const {
     if(control.users == 0 || treatment.users == 0)
     {
         std::cerr << "Absence of users in either group makes "
@@ -229,8 +231,8 @@ both groups have the same underlying conversion rate.
 
 returns 0.0 if either group contains no users.
 */
-double Experiment::pooledConversionStandardError() const
-{
+double Experiment::pooledConversionStandardError() 
+const {
     if(control.users == 0 || treatment.users == 0)
     {
         std::cerr << "Absence of users in either group makes "
@@ -258,8 +260,8 @@ hypothesis.
 
 returns 0.0 if either group contains no users.
 */
-double Experiment::conversionZScore() const
-{
+double Experiment::conversionZScore() 
+const {
     double pooledSE {pooledConversionStandardError()};
     if
     (
@@ -292,8 +294,8 @@ represents how extreme the observed difference would
 be under the null hypothesis that both groups have the
 same underlying conversion rate.
 */
-double Experiment::conversionPValue() const
-{
+double Experiment::conversionPValue() 
+const {
     double zScore {conversionZScore()};
     return std::erfc(std::abs(zScore)/std::sqrt(2));
 }
@@ -306,8 +308,8 @@ and treatment conversion rates is statistically significant.
 returns true when the conversion p-value is less than
 the supplied significance level alpha.
 */
-bool Experiment::isConversionSignificant(double alpha) const
-{
+bool Experiment::isConversionSignificant(double alpha) 
+const{
     return conversionPValue() < alpha;
 }
 
@@ -335,6 +337,118 @@ std::vector<UserRecord> filterUsersByDevice(
 }
 
 // =========================================================
+
+namespace
+{
+    /*
+    Approximates the inverse cumulative distribution function
+    of the standard normal distribution.
+
+    Given a probability strictly between 0 and 1, returns the
+    z-score whose cumulative probability is approximately equal
+        to the supplied probability.
+
+    Uses a rational approximation and symmetry of the standard
+    normal distribution.
+    
+
+    double inverseStandardNormalCDF(double probability)
+    {
+        if (!(0.0 < probability && probability < 1.0))
+        {
+            std::cerr << "Invalid probability: must be "
+                      << "strictly between 0 and 1.";
+            return 0.0;
+        }
+
+        // symmetric transformation for upper tail
+        bool negate {false};
+        if (probability < 0.5)
+        {
+            negate = true;
+        } 
+        else
+        {
+            probability = 1.0 - probability; // look up the tail area
+        }
+
+        // Rational approximation for the standard normal quantile
+        double t = std::sqrt(-2.0 * std::log(probability));
+        constexpr double c0 {2.515517};
+        constexpr double c1 {0.802853};
+        constexpr double c2 {0.010328};
+        constexpr double d1 {1.432788};
+        constexpr double d2 {0.189269};
+        constexpr double d3 {0.001308};
+
+        double numerator = c0 + (c1 * t) + (c2 * t * t);
+        double denominator = 1.0 + (d1 * t) + (d2 * t * t) + (d3 * t * t * t);
+
+        double z = t - (numerator / denominator);
+        return negate ? -z : z;
+    }*/
+    // helper function for inverse because an 
+    // inverse function for std::erfc()
+    // does not exist in C++17
+    /*
+    calculates the cumulative probability of a given z-score
+    under the standard normal distribution
+    */
+    // z = z-score
+    double standardNormalCDF(double z)
+    {
+        return 0.5 * (
+            1.0 + std::erf(z / std::sqrt(2.0))
+        );
+    };
+    /*
+    Approximates the z-score corresponding to a given cumulative
+    probability under the standard normal distribution.
+
+    Uses binary search over the interval [-8, 8]. Since the
+    standard normal CDF is strictly increasing, the search compares
+    the CDF of the midpoint with the target probability and repeatedly
+    narrows the interval until the desired numerical precision is reached.
+
+    The probability must be strictly between 0 and 1.
+    */
+    // p = probabiility
+    double inverseStandardNormalCDF(double p)
+    {
+        if (!(0.0 < p && p < 1.0))
+        {
+            std::cerr
+                << "Probability must be strictly between 0 and 1."
+                << '\n';
+
+            return 0.0;
+        }
+        double lowerpoint {-8.0}; 
+        double upperpoint {8.0};
+        // pretty much all probabilities lie between
+        // a z-score of -8 and 8
+
+        while (upperpoint - lowerpoint > 0.0000001)
+        {
+            double midpoint {(lowerpoint + upperpoint)/2};
+            double cp
+            {
+                standardNormalCDF(midpoint)
+            };
+            if (cp < p)
+            {
+                lowerpoint = midpoint;
+            }
+            else
+            {
+                upperpoint = midpoint;
+            }
+        }
+        return (lowerpoint + upperpoint) / 2.0;
+    };
+}
+
+// =========================================================
 /*
 Calculates the minimum required sample size per experiment
 group for detecting a difference between the baseline and
@@ -352,6 +466,9 @@ int requiredSampleSizePerGroup(
 {
     double pA {experimentPlan.baselineRate};
     double pB {experimentPlan.targetRate};
+    double alpha {experimentPlan.alpha}; 
+    double desiredPower {experimentPlan.desiredPower}; 
+
     // return early if the input conditions are invalid
     if (!(0.0 < pA && pA < 1.0))
     {
@@ -363,19 +480,34 @@ int requiredSampleSizePerGroup(
         std::cerr << "target rate must be between 0 and 1";
         return 0;
     }
-    if (experimentPlan.baselineRate == experimentPlan.targetRate)
+    if (!(0.0 < alpha && alpha < 1.0))
+    {
+        std::cerr << "alpha must be between 0 and 1";
+        return 0;
+    }
+    if (!(0.0 < desiredPower && desiredPower < 1.0))
+    {
+        std::cerr << "desired power must be between 0 and 1";
+        return 0;
+    }
+    if (pA == pB)
     {
         std::cerr << "target rate must be different from baseline rate";
         return 0;
     }
-    /*
-    double alpha {experimentPlan.alpha}; 
-    double power {experimentPlan.desiredPower}; 
-    these will be used when using the generalized 
-    zAlpha and zScore
-    */
-    double zAlpha {1.96}; // hardcoded for now
-    double zPower {0.8416}; // hardcoded for now
+
+    double zAlpha 
+    {
+        inverseStandardNormalCDF(
+            1.0 - alpha/2.0
+        )
+    }; 
+    double zPower 
+    {
+        inverseStandardNormalCDF(
+            desiredPower
+        )
+    }; 
     double avrgRate {(pA + pB)/2};
     double significanceTerm
     {
@@ -409,3 +541,71 @@ int requiredSampleSizePerGroup(
 }
 
 // =========================================================
+/*
+Calculates the approximate statistical power for detecting
+the difference between the baseline and target conversion
+rates at a specified sample size per group.
+
+The current implementation assumes equally sized control
+and treatment groups and a two-sided significance level
+of alpha = 0.05.
+
+Returns 0.0 if the conversion rates are invalid, the
+sample size is non-positive, or there is no treatment
+effect to detect.
+*/
+double calculatePower(
+    const ExperimentPlan& experimentPlan,
+    int sampleSizePerGroup
+)
+{
+    double pA {experimentPlan.baselineRate};
+    double pB {experimentPlan.targetRate};
+    double alpha {experimentPlan.alpha};
+    int n {sampleSizePerGroup}; // shorter name to call
+    // return early if input conditions are invalid
+    if (!(0.0 < pA && pA < 1.0))
+    {
+        std::cerr << "baseline rate must be between 0 and 1";
+        return 0.0;
+    }
+    if (!(0.0 < pB && pB < 1.0))
+    {
+        std::cerr << "target rate must be between 0 and 1";
+        return 0.0;
+    }
+    if (n <= 0)
+    {
+        std::cerr << "must have a sample size";
+        return 0.0;
+    }
+    if (pA == pB)
+    {
+        std::cerr << "No treatment effect to detect";
+        return 0.0;
+    }
+    double avrgRate {(pA + pB) / 2.0};
+    double zAlpha 
+    {
+        inverseStandardNormalCDF(
+            1.0 - alpha/2.0
+        )
+    }; 
+    double zPower 
+    {
+        ((std::sqrt(n) * std::abs(pB - pA))
+        - (zAlpha * std::sqrt(2.0 * avrgRate * (1 - avrgRate))))
+        /
+        (std::sqrt((pA * (1 - pA)) + (pB * (1 - pB))))
+    };
+    double power 
+    {
+        0.5 * (1.0 + std::erf(zPower / std::sqrt(2.0)))
+    };
+    if (!(0.0 <= power && power <= 1.0))
+    {
+        std::cerr << "Invalid Power";
+        return 0.0;
+    }
+    return power;
+}
