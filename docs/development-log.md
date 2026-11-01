@@ -397,11 +397,38 @@ The planned core statistical engine is now complete:
 - Required sample-size calculation.
 - Statistical power calculation.
 
+## Configurable Experiment Planning
+
+### Implemented
+- Added `standardNormalCDF()` using the standard normal distribution.
+- Added `inverseStandardNormalCDF()` using binary search over the interval `[-8, 8]`.
+- Removed hardcoded z-values from experiment-planning calculations.
+- `requiredSampleSizePerGroup()` now uses the supplied `alpha` and `desiredPower`.
+- `calculatePower()` now uses the supplied `alpha`.
+
+### Validation
+Added validation for:
+- Invalid significance levels.
+- Invalid desired power values.
+- Invalid baseline and target conversion rates.
+- Non-positive sample sizes.
+
+### Testing
+Verified that:
+- `alpha = 0.01` requires more users than `alpha = 0.05`.
+- 90% desired power requires more users than 80%.
+- 70% desired power requires fewer users than 80%.
+- Required sample size and achieved power calculations are internally consistent.
+- Existing power tests were updated to account for the more precise inverse-normal calculation.
+
+All automated tests pass through CTest.
+
 ## Next Steps
 
-- Generalize sample-size planning to support configurable `alpha` and desired power.
-- Integrate additional user segments as the synthetic generator evolves.
+- Integrate additional user segments as the synthetic data generator evolves.
 - Improve the synthetic revenue model with variable order values.
-- Add Python visualizations for experiment and segment results.
-- Apply the analysis engine to a real randomized A/B testing dataset.
+- Re-run and validate the C++ analysis engine against the richer synthetic experiments.
+- Add Python visualizations for overall and segment-level experiment results.
+- Apply the same analysis engine to a real randomized A/B testing dataset.
+- Compare synthetic and real-world findings and document business recommendations.
 - Finalize project documentation and README.

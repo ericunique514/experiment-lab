@@ -1178,7 +1178,7 @@ bool testCalculatePower()
         calculatePower(test1, 14751)
     };
 
-    double expected1 {0.79999549};
+    double expected1 {0.80000557};
 
     if (!approximatelyEqual(actual1, expected1))
     {
@@ -1199,7 +1199,7 @@ bool testCalculatePower()
         calculatePower(test2, 5000)
     };
 
-    double expected2 {0.37107532};
+    double expected2 {0.37108893};
 
     if (!approximatelyEqual(actual2, expected2))
     {
@@ -1220,7 +1220,7 @@ bool testCalculatePower()
         calculatePower(test3, 30000)
     };
 
-    double expected3 {0.97909867};
+    double expected3 {0.97910048};
 
     if (!approximatelyEqual(actual3, expected3))
     {
@@ -1241,7 +1241,7 @@ bool testCalculatePower()
         calculatePower(test4, 3841)
     };
 
-    double expected4 {0.80000549};
+    double expected4 {0.80001558};
 
     if (!approximatelyEqual(actual4, expected4))
     {
@@ -1263,7 +1263,7 @@ bool testCalculatePower()
         calculatePower(test5, 14751)
     };
 
-    double expected5 {0.79999549};
+    double expected5 {0.80000557};
 
     if (!approximatelyEqual(actual5, expected5))
     {
@@ -1284,7 +1284,7 @@ bool testCalculatePower()
         calculatePower(test6, 25583)
     };
 
-    double expected6 {0.80000150};
+    double expected6 {0.80001158};
 
     if (!approximatelyEqual(actual6, expected6))
     {
@@ -1361,6 +1361,202 @@ bool testCalculatePower()
 
     return true;
 }
+
+// ===========================================
+
+// test configurable experiment-planning parameters
+bool testExperimentPlanningParameters()
+{
+    // test 1: original baseline case
+    // alpha = 0.05, desired power = 0.80
+    ExperimentPlan test1
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.80
+    };
+
+    int sampleSize1 {
+        requiredSampleSizePerGroup(test1)
+    };
+
+    if (sampleSize1 != 14751)
+    {
+        return false;
+    }
+
+    double achievedPower1 {
+        calculatePower(test1, sampleSize1)
+    };
+
+    if (achievedPower1 < 0.80 ||
+        achievedPower1 > 0.801)
+    {
+        return false;
+    }
+
+    // test 2: stricter alpha should require more users
+    ExperimentPlan test2
+    {
+        0.10,
+        0.11,
+        0.01,
+        0.80
+    };
+
+    int sampleSize2 {
+        requiredSampleSizePerGroup(test2)
+    };
+
+    if (sampleSize2 != 21950)
+    {
+        return false;
+    }
+
+    if (sampleSize2 <= sampleSize1)
+    {
+        return false;
+    }
+
+    double achievedPower2 {
+        calculatePower(test2, sampleSize2)
+    };
+
+    if (achievedPower2 < 0.80 ||
+        achievedPower2 > 0.801)
+    {
+        return false;
+    }
+
+    // test 3: higher desired power should require more users
+    ExperimentPlan test3
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.90
+    };
+
+    int sampleSize3 {
+        requiredSampleSizePerGroup(test3)
+    };
+
+    if (sampleSize3 != 19747)
+    {
+        return false;
+    }
+
+    if (sampleSize3 <= sampleSize1)
+    {
+        return false;
+    }
+
+    double achievedPower3 {
+        calculatePower(test3, sampleSize3)
+    };
+
+    if (achievedPower3 < 0.90 ||
+        achievedPower3 > 0.901)
+    {
+        return false;
+    }
+
+    // test 4: lower desired power should require fewer users
+    ExperimentPlan test4
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.70
+    };
+
+    int sampleSize4 {
+        requiredSampleSizePerGroup(test4)
+    };
+
+    if (sampleSize4 != 11600)
+    {
+        return false;
+    }
+
+    if (sampleSize4 >= sampleSize1)
+    {
+        return false;
+    }
+
+    double achievedPower4 {
+        calculatePower(test4, sampleSize4)
+    };
+
+    if (achievedPower4 < 0.70 || 
+        achievedPower4 > 0.701)
+    {
+        return false;
+    }
+
+    // test 5: invalid alpha
+    ExperimentPlan test5
+    {
+        0.10,
+        0.11,
+        0.0,
+        0.80
+    };
+
+    if (requiredSampleSizePerGroup(test5) != 0)
+    {
+        return false;
+    }
+
+
+    // test 6: alpha above valid range
+    ExperimentPlan test6
+    {
+        0.10,
+        0.11,
+        1.0,
+        0.80
+    };
+
+    if (requiredSampleSizePerGroup(test6) != 0)
+    {
+        return false;
+    }
+
+
+    // test 7: invalid desired power
+    ExperimentPlan test7
+    {
+        0.10,
+        0.11,
+        0.05,
+        0.0
+    };
+
+    if (requiredSampleSizePerGroup(test7) != 0)
+    {
+        return false;
+    }
+
+
+    // test 8: desired power above valid range
+    ExperimentPlan test8
+    {
+        0.10,
+        0.11,
+        0.05,
+        1.0
+    };
+
+    if (requiredSampleSizePerGroup(test8) != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 // ===========================================
 
 // call all functions in main
@@ -1381,7 +1577,8 @@ int main()
         testIsConversionSignificant() &&
         testFilterUsersByDevice() &&
         testRequiredSampleSizePerGroup() &&
-        testCalculatePower()
+        testCalculatePower() &&
+        testExperimentPlanningParameters()
     )
     {
         std::cout << "PASS" << std::endl;
