@@ -89,6 +89,6 @@ df_v1.to_csv(folderpath + 'generated_users.csv', index=False)
 df_v2.to_csv(folderpath + 'generated_users_full.csv', index=False)
 
 # Save the dataframe to a SQLite database
-connection = sqlite3.connect('generated_users.db')
+connection = sqlite3.connect('generated_users_full.db')
 df_v2.to_sql(name='generated_users', con=connection, if_exists='replace', index=False)
 connection.close()
