@@ -1,6 +1,9 @@
 #ifndef EXPERIMENT_HPP
 #define EXPERIMENT_HPP
 
+#include <string>
+#include <vector>
+
 struct ExperimentGroup 
 {
     int users;
@@ -23,6 +26,7 @@ struct Experiment
     ExperimentGroup treatment;
 
     double absoluteLift() const;
+    
     double relativeLift() const;
 
     double absoluteRevenueLift() const;

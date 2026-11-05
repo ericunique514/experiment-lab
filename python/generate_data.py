@@ -3,6 +3,8 @@ import pandas as pd
 import sqlite3 
 
 user_info = []
+user_info_full = []
+folderpath = "./data/raw/" 
 
 # COMMENT OUT THIS LINE IF YOU WANT YOUR OWN DATASET. CURRENTLY GIVES THE SAME DATASET OVER AND OVER AGAIN FOR TESTING PURPOSES
 random.seed(1)
@@ -15,6 +17,22 @@ for user_id in range(1, 40001):
         device = 'Desktop'
     else:
         device = 'Mobile'
+
+    # randomizes the user type of the user with 70% chance of being new and 30% chance of being returning
+    user_type_roll = random.random()
+    if user_type_roll <= 0.7:
+        user_type = 'New'
+    else:
+        user_type = 'Returning'
+
+    # randomizes the traffic source of the user with 30% chance of being organic, 30% chance of being paid, and 40% chance of being referral
+    traffic_source_roll = random.random()
+    if traffic_source_roll <= 0.3:
+        traffic_source = 'Organic'
+    elif traffic_source_roll <= 0.6:
+        traffic_source = 'Paid'
+    else:
+        traffic_source = 'Referral'
 
     # randomizes the group of the user
     group = random.choice(['A', 'B'])
@@ -52,20 +70,25 @@ for user_id in range(1, 40001):
                 purchased = 0
                 order_price = 0
 
-    # Store all the information in a list to be transformed into a pandas dataframe           
-    user_info.append([user_id, device, group, purchased, order_price])
+    # Store all the information in a list to be transformed into a pandas dataframe with only the 5 first columns for the current C++ part
 
-df = pd.DataFrame(user_info, columns=['user_id', 'device', 'variant', 'purchased', 'order_price'])
-print(df)
+    user_info.append([user_id, device, group, purchased, order_price])
+    # Store all the information in a list to be transformed into a pandas dataframe           
+    user_info_full.append([user_id, device, group, purchased, order_price, user_type, traffic_source])
+
+df_v1 = pd.DataFrame(user_info, columns=['user_id', 'device', 'variant', 'purchased', 'order_price'])
+df_v2 = pd.DataFrame(user_info_full, columns=['user_id', 'device', 'variant', 'purchased', 'order_price', 'user_type', 'traffic_source'])
+print(df_v2.head())
 
 # group by device and group to get the conversion rate of each set of device and group
-grouped_pd = df.groupby(['device', 'variant'], as_index=False)['purchased'].mean().rename(columns={'purchased': 'Conversion Rate'})
+grouped_pd = df_v1.groupby(['device', 'variant'], as_index=False)['purchased'].mean().rename(columns={'purchased': 'Conversion Rate'})
 print(grouped_pd)
 
 # Save the dataframe to a csv file for C++ part
-df.to_csv('generated_users.csv', index=False)
+df_v1.to_csv(folderpath + 'generated_users.csv', index=False)
+df_v2.to_csv(folderpath + 'generated_users_full.csv', index=False)
 
 # Save the dataframe to a SQLite database
 connection = sqlite3.connect('generated_users.db')
-df.to_sql(name='generated_users', con=connection, if_exists='replace', index=False)
+df_v2.to_sql(name='generated_users', con=connection, if_exists='replace', index=False)
 connection.close()

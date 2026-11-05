@@ -221,4 +221,5 @@ __marimo__/
 
 # Generated experiment data
 generated_users.csv
+generated_users_full.csv
 generated_users.db
