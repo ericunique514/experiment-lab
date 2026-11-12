@@ -432,3 +432,26 @@ All automated tests pass through CTest.
 - Apply the same analysis engine to a real randomized A/B testing dataset.
 - Compare synthetic and real-world findings and document business recommendations.
 - Finalize project documentation and README.
+
+
+---
+
+## Python and SQL Pipeline
+
+### Implemented
+- Data generator now produces `user_type` and `traffic_source`, and the purchase probability depends on device, group, traffic source and (for group B) user type.
+- Added `sql/schema.sql` with `users`, `experiment_assignments` and `purchases` tables.
+- Added `python/load_db.py` to build the database and load the generated data.
+- Added `sql/queries.sql` and `python/run_queries.py` for overall and segment metrics.
+- Added `python/analysis.py`: segment tables, `statsmodels` z-test and confidence intervals, and three charts.
+- C++ `main.cpp` now reads `data/raw/generated_users.csv`, so it runs from the repo root.
+- Wrote `docs/findings.md` and filled in the README.
+
+### Validation
+- SQL conversion and revenue per user match the C++ report for the overall experiment (10.24% vs 11.37%, $5.12 vs $5.69).
+- An independent Python calculation reproduces the C++ z-scores, p-values and confidence intervals for overall, mobile and desktop.
+
+### Remaining
+- Variable order prices in the data generator.
+- Segment filters for `user_type` and `traffic_source` in the C++ engine.
+- Run the same pipeline on a real dataset (MineThatData).

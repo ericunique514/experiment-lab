@@ -223,3 +223,4 @@ __marimo__/
 generated_users.csv
 generated_users_full.csv
 generated_users.db
+*.db
