@@ -1,13 +1,38 @@
+import os
 import random
 import pandas as pd
-import sqlite3 
 
 user_info = []
 user_info_full = []
-folderpath = "./data/raw/" 
+folderpath = "./data/raw/"
+os.makedirs(folderpath, exist_ok=True)
 
 # COMMENT OUT THIS LINE IF YOU WANT YOUR OWN DATASET. CURRENTLY GIVES THE SAME DATASET OVER AND OVER AGAIN FOR TESTING PURPOSES
 random.seed(1)
+
+# Base purchase probability for each (device, group). These are the original targets.
+BASE_RATE = {
+    ('Desktop', 'A'): 0.12,
+    ('Desktop', 'B'): 0.123,
+    ('Mobile', 'A'): 0.09,
+    ('Mobile', 'B'): 0.11,
+}
+
+# Treatment effect by user type, added to group B only.
+# The weights (70% New, 30% Returning) make these cancel out: 0.7 * 0.006 + 0.3 * -0.014 = 0,
+# so the overall device-level lift stays the same, but New users gain and Returning users lose.
+TREATMENT_ADJUSTMENT = {
+    'New': 0.006,
+    'Returning': -0.014,
+}
+
+# Traffic source adjustment, added to both groups. Weights (30/30/40) also cancel out:
+# 0.3 * 0.01 + 0.3 * -0.01 + 0.4 * 0 = 0.
+SOURCE_ADJUSTMENT = {
+    'Organic': 0.01,
+    'Paid': -0.01,
+    'Referral': 0.0,
+}
 
 # creates fake users
 for user_id in range(1, 40001):
@@ -37,38 +62,20 @@ for user_id in range(1, 40001):
     # randomizes the group of the user
     group = random.choice(['A', 'B'])
 
-    # randomizes the decision of the user to buy or not depending on the group and the device
+    # the chance of buying depends on device and group, plus the traffic source,
+    # plus a treatment effect for group B that depends on the user type
+    purchase_probability = BASE_RATE[(device, group)] + SOURCE_ADJUSTMENT[traffic_source]
+    if group == 'B':
+        purchase_probability += TREATMENT_ADJUSTMENT[user_type]
+
+    # randomizes the decision of the user to buy or not
     purchase_chance = random.random()
-    if device == 'Desktop':
-        if group == 'A':
-            if purchase_chance <= 0.12: # Desktop users in group A with 12% chance of buying
-                purchased = 1
-                order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
-            else: 
-                purchased = 0
-                order_price = 0
-        else:
-            if purchase_chance <= 0.123: # Desktop users in group B with 12.3% chance of buying
-                purchased = 1
-                order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
-            else:
-                purchased = 0
-                order_price = 0
+    if purchase_chance <= purchase_probability:
+        purchased = 1
+        order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
     else:
-        if group == 'A':
-            if purchase_chance <= 0.09: # Mobile users in group A with 9% chance of buying
-                purchased = 1
-                order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
-            else: 
-                purchased = 0
-                order_price = 0
-        else:
-            if purchase_chance <= 0.11: # Mobile users in group B with 11% chance of buying
-                purchased = 1
-                order_price = 49.99 # Placeholder price for now. Can be randomized if needed.
-            else:
-                purchased = 0
-                order_price = 0
+        purchased = 0
+        order_price = 0
 
     # Store all the information in a list to be transformed into a pandas dataframe with only the 5 first columns for the current C++ part
 
@@ -88,7 +95,4 @@ print(grouped_pd)
 df_v1.to_csv(folderpath + 'generated_users.csv', index=False)
 df_v2.to_csv(folderpath + 'generated_users_full.csv', index=False)
 
-# Save the dataframe to a SQLite database
-connection = sqlite3.connect('generated_users.db')
-df_v2.to_sql(name='generated_users', con=connection, if_exists='replace', index=False)
-connection.close()
+# The SQLite database is built by python/load_db.py

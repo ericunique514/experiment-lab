@@ -98,7 +98,7 @@ int main()
 {
     // Load the full generated dataset
     std::vector<UserRecord> users =
-        loadUsersFromCsv("generated_users.csv");
+         loadUsersFromCsv("data/raw/generated_users.csv");
 
 
     // Overall experiment
